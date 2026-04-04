@@ -85,6 +85,15 @@ services:
 docker build -t context-mcp:latest .
 ```
 
+### Initialize Qdrant collections (run once)
+
+```bash
+pip install qdrant-client
+python init_collections.py
+```
+
+This creates the 5 required collections: `memory_identity`, `memory_projects`, `memory_code`, `memory_general`, `skills`.
+
 ---
 
 ## Configuration
