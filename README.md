@@ -93,15 +93,13 @@ pip install qdrant-client
 python init_collections.py
 ```
 
-**With Docker (no Python install needed):**
+**With Docker (after building the image):**
 ```bash
 docker run --rm \
   -e QDRANT_URL=http://your-server:6333 \
   -e QDRANT_API_KEY=your-qdrant-key \
-  -v $(pwd):/app \
-  -w /app \
-  python:3.12-slim \
-  sh -c "pip install qdrant-client -q && python init_collections.py"
+  context-mcp:latest \
+  python init_collections.py
 ```
 
 This creates the 5 required Qdrant collections:
