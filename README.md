@@ -85,6 +85,12 @@ services:
 docker build -t context-mcp:latest .
 ```
 
+### Start the stack
+
+```bash
+docker compose up -d
+```
+
 ### Initialize Qdrant collections (run once)
 
 **With Python:**
