@@ -87,12 +87,32 @@ docker build -t context-mcp:latest .
 
 ### Initialize Qdrant collections (run once)
 
+**With Python:**
 ```bash
 pip install qdrant-client
 python init_collections.py
 ```
 
-This creates the 5 required collections: `memory_identity`, `memory_projects`, `memory_code`, `memory_general`, `skills`.
+**With Docker (no Python install needed):**
+```bash
+docker run --rm \
+  -e QDRANT_URL=http://your-server:6333 \
+  -e QDRANT_API_KEY=your-qdrant-key \
+  -v $(pwd):/app \
+  -w /app \
+  python:3.12-slim \
+  sh -c "pip install qdrant-client -q && python init_collections.py"
+```
+
+This creates the 5 required Qdrant collections:
+
+| Collection | Purpose |
+|------------|---------|
+| `memory_identity` | User preferences, personal facts, who the user is |
+| `memory_projects` | Ongoing work, goals, decisions, project context |
+| `memory_code` | Languages, frameworks, coding patterns, conventions |
+| `memory_general` | Everything else that doesn't fit above |
+| `skills` | Reusable step-by-step instructions for the LLM to follow |
 
 ---
 
