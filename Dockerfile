@@ -14,4 +14,4 @@ ENV MCP_API_KEY=""
 
 EXPOSE 8083
 
-CMD ["python", "main.py", "sse"]
+CMD ["python", "server/main.py", "streamable-http"]

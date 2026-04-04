@@ -58,19 +58,17 @@ context-intelligence/
 │   └── embeddings.py              # FastEmbed wrapper (all-MiniLM-L6-v2, 384 dims)
 │
 ├── setup/                         # ── Setup & Config ──
-│   ├── init_collections.py        # One-time script to create Qdrant collections
-│   ├── Dockerfile                 # Container build for the MCP server
-│   ├── requirements.txt           # Python dependencies
-│   └── docker-compose.yml         # Stack definition (Qdrant + MCP server)
+│   └── init_collections.py        # One-time script to create Qdrant collections
 │
 ├── docs/                          # ── Documentation ──
-│   ├── SYSTEM_PROMPT.md           # Drop-in system prompt for LLM clients
-│   └── README.md                  # You are here
+│   └── SYSTEM_PROMPT.md           # Drop-in system prompt for LLM clients
 │
-└── LICENSE                        # MIT
+├── Dockerfile                     # Container build for the MCP server
+├── requirements.txt               # Python dependencies
+├── README.md                      # You are here
+├── LICENSE                        # MIT
+└── .gitignore
 ```
-
-> **Note:** All files currently live at the repo root (flat structure). The grouping above shows logical organization — server code, setup scripts, and documentation.
 
 ---
 
@@ -144,7 +142,7 @@ docker run --rm --network host \
   -e QDRANT_URL=http://localhost:6333 \
   -e QDRANT_API_KEY=your-qdrant-key \
   context-mcp:latest \
-  python init_collections.py
+  python setup/init_collections.py
 ```
 
 **With Python (if installed locally):**
@@ -229,7 +227,7 @@ args = ["--yes", "mcp-remote", "http://your-server:8083/mcp", "--allow-http", "-
 
 ## System Prompt
 
-To enable automatic memory behavior in your AI client, see [SYSTEM_PROMPT.md](SYSTEM_PROMPT.md). It instructs the model to proactively search and store memories without being asked.
+To enable automatic memory behavior in your AI client, see [SYSTEM_PROMPT.md](docs/SYSTEM_PROMPT.md). It instructs the model to proactively search and store memories without being asked.
 
 ---
 
