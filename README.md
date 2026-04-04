@@ -2,7 +2,20 @@
 
 A model-agnostic middleware that gives LLMs persistent memory and reusable skills via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/).
 
-Store memories and skills in a vector database (Qdrant), search them semantically, and retrieve them across any MCP-compatible AI client — Claude, Codex, or any future model.
+## Why this exists
+
+Every time you start a new conversation with an LLM, it forgets everything — your preferences, past decisions, project context, and workflows you've already explained. You end up repeating yourself across sessions.
+
+This project solves that. It gives any MCP-compatible model a **long-term memory** and a **skill library** backed by a vector database. Memories are stored semantically, so the model retrieves them by meaning — not exact keywords. Skills let you save multi-step procedures once and have the model follow them automatically in future sessions.
+
+The key design choice: **model-agnostic**. This isn't locked to Claude or GPT. Any client that speaks MCP (Claude Desktop, Claude Code, Codex, LiteLLM, or anything built tomorrow) can plug in and instantly get persistent context. Switch models, keep your memory.
+
+### What it can do
+
+- Remember who you are, what you're working on, and how you like things done
+- Recall decisions from weeks-old conversations without you repeating them
+- Store deployment checklists, debugging workflows, or review processes as reusable skills
+- Work across multiple AI clients simultaneously — same memory, different models
 
 ---
 
@@ -30,6 +43,34 @@ MCP Client (Claude / Codex / etc.)
         ▼
    Qdrant (vector DB)
 ```
+
+---
+
+## Project Structure
+
+```
+context-intelligence/
+│
+├── server/                        # ── Core Server ──
+│   ├── main.py                    # MCP server entry point, tool definitions, auth setup
+│   ├── qdrant_store.py            # Qdrant CRUD — store, search, delete operations
+│   ├── schemas.py                 # Pydantic models (MemoryEntry, SkillEntry)
+│   └── embeddings.py              # FastEmbed wrapper (all-MiniLM-L6-v2, 384 dims)
+│
+├── setup/                         # ── Setup & Config ──
+│   ├── init_collections.py        # One-time script to create Qdrant collections
+│   ├── Dockerfile                 # Container build for the MCP server
+│   ├── requirements.txt           # Python dependencies
+│   └── docker-compose.yml         # Stack definition (Qdrant + MCP server)
+│
+├── docs/                          # ── Documentation ──
+│   ├── SYSTEM_PROMPT.md           # Drop-in system prompt for LLM clients
+│   └── README.md                  # You are here
+│
+└── LICENSE                        # MIT
+```
+
+> **Note:** All files currently live at the repo root (flat structure). The grouping above shows logical organization — server code, setup scripts, and documentation.
 
 ---
 
