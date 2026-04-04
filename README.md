@@ -85,6 +85,7 @@ services:
       - MAX_SEARCH_LIMIT=50
     restart: unless-stopped
 ```
+**Note:** Replace `your-qdrant-key` and `your-mcp-api-key` with your own random strings — these are secrets you create, not values you get from anywhere. Use a password generator or something like `openssl rand -base64 24`.
 
 ### 3. Start the stack
 
