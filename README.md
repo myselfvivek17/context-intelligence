@@ -51,9 +51,16 @@ MCP Client (Claude / Codex / etc.)
 ### Prerequisites
 
 - Docker + Docker Compose
-- A running [Qdrant](https://qdrant.tech/) instance
 
-### Run with Docker Compose
+### 1. Clone and build the image
+
+```bash
+git clone https://github.com/myselfvivek17/context-intelligence.git
+cd context-intelligence
+docker build -t context-mcp:latest .
+```
+
+### 2. Create `docker-compose.yml`
 
 ```yaml
 services:
@@ -79,33 +86,29 @@ services:
     restart: unless-stopped
 ```
 
-### Build the image
-
-```bash
-docker build -t context-mcp:latest .
-```
-
-### Start the stack
+### 3. Start the stack
 
 ```bash
 docker compose up -d
 ```
 
-### Initialize Qdrant collections (run once)
+### 4. Initialize Qdrant collections (run once)
 
-**With Python:**
-```bash
-pip install qdrant-client
-python init_collections.py
-```
+Wait a few seconds for Qdrant to start, then:
 
-**With Docker (after building the image):**
+**With Docker:**
 ```bash
-docker run --rm \
-  -e QDRANT_URL=http://your-server:6333 \
+docker run --rm --network host \
+  -e QDRANT_URL=http://localhost:6333 \
   -e QDRANT_API_KEY=your-qdrant-key \
   context-mcp:latest \
   python init_collections.py
+```
+
+**With Python (if installed locally):**
+```bash
+pip install qdrant-client
+QDRANT_URL=http://your-server:6333 QDRANT_API_KEY=your-qdrant-key python init_collections.py
 ```
 
 This creates the 5 required Qdrant collections:
@@ -153,7 +156,7 @@ This creates the 5 required Qdrant collections:
 }
 ```
 
-### Claude Desktop (`claude_desktop_config.json`)
+### Claude Desktop — Windows (`claude_desktop_config.json`)
 
 ```json
 {
