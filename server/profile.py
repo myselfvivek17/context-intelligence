@@ -12,6 +12,11 @@ def _ledger_version() -> int:
     return r["v"] or 0
 
 
+def _clip(text: str, n: int = 220) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= n else text[:n].rsplit(" ", 1)[0] + " …"
+
+
 def build() -> str:
     global _cache
     ver = _ledger_version()
@@ -24,9 +29,11 @@ def build() -> str:
         "FROM memories m JOIN entities e ON e.id = m.subject_id "
         "WHERE m.status = 'active' AND m.relation IS NOT NULL AND m.importance >= ? "
         "ORDER BY e.name COLLATE NOCASE, m.relation", (cutoff,))
+    # Who the user is (identity notes) belongs in the always-on block; project notes are long and situational,
+    # so they reach the agent through per-prompt recall instead.
     notes = db.query(
         "SELECT domain, content, substr(observed_at, 1, 10) AS since FROM memories "
-        "WHERE status = 'active' AND relation IS NULL AND importance >= ? AND domain IN ('identity', 'projects') "
+        "WHERE status = 'active' AND relation IS NULL AND importance >= ? AND domain = 'identity' "
         "ORDER BY importance DESC, observed_at DESC", (cutoff,))
     lines = [f"# Core memory (as of {db.now()[:10]})"]
     subject = None
@@ -37,8 +44,8 @@ def build() -> str:
         value = f["object_text"] or f["content"]
         lines.append(f"- {f['relation'].replace('_', ' ')}: {value} (since {f['since']})")
     if notes:
-        lines.append("\n## Notes")
-        lines += [f"- [{n['domain']}] {n['content']} ({n['since']})" for n in notes]
+        lines.append("\n## About the user")
+        lines += [f"- {_clip(n['content'])} ({n['since']})" for n in notes]
     out, size = [], 0
     for line in lines:
         if size + len(line) + 1 > cap:

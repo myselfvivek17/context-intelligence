@@ -313,7 +313,7 @@ def api_recall(b: dict):
     def in_profile(h):  # mirror profile.build()'s selection so the session-start block isn't repeated per prompt
         if h["relation"]:
             return h["importance"] >= cutoff
-        return h["importance"] >= cutoff and h["domain"] in ("identity", "projects") and h["content"] in core
+        return h["importance"] >= cutoff and h["domain"] == "identity"
 
     hits = retrieve.search(prompt, limit=settings.get("recall_max") + 3, rerank=True)
     keep = [h for h in hits if h["score"] >= settings.get("recall_min_score") and not in_profile(h)]

@@ -25,7 +25,8 @@ DEFAULTS: dict[str, tuple[object, str]] = {
                                   "on an i5-8250U, 8 × 320 chars ≈ 0.2 s)"),
     "link_k":               (3, "A-MEM: related links created per new memory"),
     "link_min_sim":         (0.6, "A-MEM: minimum cosine similarity for a related link"),
-    "recall_min_score":     (0.0, "Recall hook: minimum rerank logit to inject a memory"),
+    "recall_min_score":     (-2.0, "Recall hook: minimum rerank logit to inject a memory (measured on real memories: "
+                                   "relevant hits ≥ -1.1, irrelevant ≤ -3.6)"),
     "recall_max":           (3, "Recall hook: max memories injected per prompt"),
     "profile_min_importance": (0.7, "Core profile: include active facts at/above this importance"),
     "profile_max_chars":    (3200, "Core profile size cap (~800 tokens)"),
