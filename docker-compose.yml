@@ -1,0 +1,22 @@
+services:
+  context-intelligence:
+    build:
+      context: .
+      args:
+        WITH_LAYA: ${WITH_LAYA:-0}
+    image: context-intelligence-v2:latest
+    container_name: context-intelligence-v2
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8084}:${PORT:-8084}"
+    environment:
+      PORT: ${PORT:-8084}
+      MCP_API_KEY: ${MCP_API_KEY:?set MCP_API_KEY in .env}
+      TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
+      JUDGE_BACKEND: ${JUDGE_BACKEND:-jev}
+      WEB_UI: ${WEB_UI:-false}
+    volumes:
+      - ci-data:/data
+
+volumes:
+  ci-data:

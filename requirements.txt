@@ -1,0 +1,4 @@
+fastmcp>=2.12
+fastembed>=0.7
+sqlite-vec>=0.1.6
+numpy
