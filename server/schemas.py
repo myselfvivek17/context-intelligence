@@ -14,6 +14,7 @@ class MemoryEntry(BaseModel):
 class SkillEntry(BaseModel):
     name: str
     description: str
+    domain: str = "general"  # identity | projects | code | general
     trigger_tags: list[str] = []
     instructions: str
     examples: list[str] = []

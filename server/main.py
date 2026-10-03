@@ -1,4 +1,9 @@
+import functools
+import hmac
+import json
 import os
+import sys
+import time
 from typing import Optional
 
 from fastmcp import FastMCP
@@ -9,6 +14,7 @@ from qdrant_store import (
     get_client,
     store_memory,
     search_memory,
+    list_memories,
     store_skill,
     find_skill,
     list_skills,
@@ -25,7 +31,7 @@ MAX_SEARCH_LIMIT = int(os.environ.get("MAX_SEARCH_LIMIT", 50))
 auth = None
 if MCP_API_KEY:
     auth = DebugTokenVerifier(
-        validate=lambda token: token == MCP_API_KEY,
+        validate=lambda token: hmac.compare_digest(token, MCP_API_KEY),
         client_id="mcp-client",
         scopes=["full"],
     )
@@ -34,8 +40,33 @@ mcp = FastMCP("context-intelligence", auth=auth)
 client = get_client(QDRANT_URL, QDRANT_API_KEY)
 
 
+def logged(fn):
+    """One JSON line per tool call on stdout (docker logs) so usage is measurable."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        t0 = time.perf_counter()
+        rec = {"evt": "tool_call", "tool": fn.__name__, "domain": kwargs.get("domain")}
+        try:
+            out = fn(*args, **kwargs)
+            items = out.get("items") if isinstance(out, dict) else out
+            if isinstance(items, list):
+                rec["n_results"] = len(items)
+                scores = [r.get("score") for r in items if isinstance(r, dict) and r.get("score") is not None]
+                rec["top_score"] = round(max(scores), 3) if scores else None
+            return out
+        except Exception as e:
+            rec["error"] = type(e).__name__
+            raise
+        finally:
+            rec["ms"] = round((time.perf_counter() - t0) * 1000)
+            rec["ts"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            print(json.dumps(rec), file=sys.stdout, flush=True)
+    return wrapper
+
+
 
 @mcp.tool()
+@logged
 def store_memory_tool(
     content: str,
     domain: str,
@@ -47,14 +78,14 @@ def store_memory_tool(
 ) -> str:
     """
     Store a memory entry in the specified domain collection.
-    domain must be one of: identity, projects, code, general.
+    domain must be one of: identity, projects, code, general, diary.
     type should be one of: preference, fact, decision, goal, note.
     importance is 0.0 to 1.0 (default 0.5).
     tags: comma-separated keywords (e.g. "python,backend,language").
     """
     collection = f"memory_{domain}"
     if collection not in MEMORY_COLLECTIONS:
-        return f"Invalid domain '{domain}'. Choose from: identity, projects, code, general."
+        return f"Invalid domain '{domain}'. Choose from: identity, projects, code, general, diary."
     importance = max(0.0, min(1.0, importance))
     entry = MemoryEntry(
         content=content,
@@ -69,6 +100,7 @@ def store_memory_tool(
 
 
 @mcp.tool()
+@logged
 def search_memory_tool(
     query: str,
     domain: str,
@@ -79,22 +111,37 @@ def search_memory_tool(
 ) -> list[dict]:
     """
     Search memories in the specified domain using semantic similarity.
-    domain must be one of: identity, projects, code, general.
+    domain must be one of: identity, projects, code, general, diary.
     Optionally filter by type, a single tag, or minimum importance score.
     Returns top matching memories with their scores.
     """
     collection = f"memory_{domain}"
     if collection not in MEMORY_COLLECTIONS:
-        return [{"error": f"Invalid domain '{domain}'. Choose from: identity, projects, code, general."}]
+        return [{"error": f"Invalid domain '{domain}'. Choose from: identity, projects, code, general, diary."}]
     limit = min(limit, MAX_SEARCH_LIMIT)
     return search_memory(client, collection, query, limit, type_filter, tag_filter, min_importance)
 
 
 @mcp.tool()
+@logged
+def list_memories_tool(domain: str, limit: int = 100, offset: Optional[str] = None) -> dict:
+    """
+    List (browse) memories in a domain without a search query, newest scroll order.
+    domain must be one of: identity, projects, code, general, diary.
+    Returns {"items": [...], "next_offset": <cursor or null>}; pass next_offset back to page.
+    """
+    collection = f"memory_{domain}"
+    if collection not in MEMORY_COLLECTIONS:
+        return {"error": f"Invalid domain '{domain}'. Choose from: identity, projects, code, general, diary."}
+    return list_memories(client, collection, limit, offset)
+
+
+@mcp.tool()
+@logged
 def delete_memory_tool(domain: str, point_id: str) -> str:
     """
     Delete a specific memory entry by its ID.
-    domain must be one of: identity, projects, code, general.
+    domain must be one of: identity, projects, code, general, diary.
     """
     collection = f"memory_{domain}"
     if collection not in MEMORY_COLLECTIONS:
@@ -104,15 +151,18 @@ def delete_memory_tool(domain: str, point_id: str) -> str:
 
 
 @mcp.tool()
+@logged
 def store_skill_tool(
     name: str,
     description: str,
     instructions: str,
+    domain: str = "general",
     trigger_tags: str = "",
     examples: str = "",
 ) -> str:
     """
     Store a reusable skill with its instruction set.
+    domain groups the skill under identity | projects | code | general (default general).
     trigger_tags: comma-separated keywords/intents that should activate this skill (e.g. "docker,deploy,portainer").
     examples: comma-separated example prompts that would trigger this skill.
     instructions should be step-by-step markdown guidance.
@@ -120,6 +170,7 @@ def store_skill_tool(
     entry = SkillEntry(
         name=name,
         description=description,
+        domain=domain,
         trigger_tags=[t.strip() for t in trigger_tags.split(",") if t.strip()],
         instructions=instructions,
         examples=[e.strip() for e in examples.split(",") if e.strip()],
@@ -129,6 +180,7 @@ def store_skill_tool(
 
 
 @mcp.tool()
+@logged
 def find_skill_tool(query: str, limit: int = 3) -> list[dict]:
     """
     Find relevant skills based on a query or user intent.
@@ -139,6 +191,7 @@ def find_skill_tool(query: str, limit: int = 3) -> list[dict]:
 
 
 @mcp.tool()
+@logged
 def list_skills_tool() -> list[dict]:
     """
     List all available skills with their names, descriptions, and trigger tags.

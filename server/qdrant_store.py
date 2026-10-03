@@ -8,7 +8,7 @@ from qdrant_client.models import PointStruct, Filter, FieldCondition, MatchValue
 from embeddings import embed
 from schemas import MemoryEntry, SkillEntry
 
-MEMORY_COLLECTIONS = ["memory_identity", "memory_projects", "memory_code", "memory_general"]
+MEMORY_COLLECTIONS = ["memory_identity", "memory_projects", "memory_code", "memory_general", "memory_diary"]
 SKILLS_COLLECTION = "skills"
 
 
@@ -74,12 +74,30 @@ def search_memory(
     return [{"id": str(r.id), "score": r.score, **r.payload} for r in results]
 
 
+def list_memories(client: QdrantClient, collection: str, limit: int = 100, offset: Optional[str] = None) -> dict:
+    # ponytail: cursor pagination via Qdrant's native scroll offset; no fake integer paging.
+    try:
+        results, next_offset = client.scroll(
+            collection_name=collection,
+            with_payload=True,
+            limit=limit,
+            offset=offset,
+        )
+    except Exception as e:
+        raise RuntimeError(f"Failed to list memories: {e}") from e
+    return {
+        "items": [{"id": str(r.id), **r.payload} for r in results],
+        "next_offset": str(next_offset) if next_offset is not None else None,
+    }
+
+
 def store_skill(client: QdrantClient, entry: SkillEntry) -> str:
     point_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     payload = {
         "name": entry.name,
         "description": entry.description,
+        "domain": entry.domain,
         "trigger_tags": entry.trigger_tags,
         "instructions": entry.instructions,
         "examples": entry.examples,

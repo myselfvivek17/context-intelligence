@@ -15,6 +15,7 @@ COLLECTIONS = [
     "memory_projects",
     "memory_code",
     "memory_general",
+    "memory_diary",
     "skills",
 ]
 
