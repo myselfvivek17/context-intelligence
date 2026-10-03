@@ -283,6 +283,14 @@ def api_store(b: dict):
                               expires_at=b.get("expires_at"), extra=b.get("extra"))
 
 
+@mcp.custom_route("/v1/memories/delete", methods=["POST"])
+@_api
+def api_delete(b: dict):
+    """Retire by v2 id or caller external_id (kept in history, hidden from search)."""
+    ref = b.get("external_id") or b["id"]
+    return {"deleted": write.delete_memory(ref, agent=b.get("agent")), "ref": ref}
+
+
 @mcp.custom_route("/v1/skills", methods=["POST"])
 @_api
 def api_store_skill(b: dict):
@@ -320,7 +328,8 @@ def api_recall(b: dict):
     keep = keep[:settings.get("recall_max")]
     with db.tx() as c:
         db.log_event(c, "recall", agent=b.get("agent"), n=len(keep))
-    lines = [f"- {h['content']} ({h['domain']}, {h['observed_at'][:10]})" for h in keep]
+    clip = lambda t: t if len(t) <= 500 else t[:500].rsplit(" ", 1)[0] + " …"  # token budget per injected memory
+    lines = [f"- {clip(h['content'])} ({h['domain']}, {h['observed_at'][:10]})" for h in keep]
     return {"context": ("Relevant memory:\n" + "\n".join(lines)) if lines else "",
             "items": [{"id": h["id"], "content": h["content"], "score": h["score"]} for h in keep]}
 
