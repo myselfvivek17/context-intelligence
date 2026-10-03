@@ -323,7 +323,8 @@ def api_recall(b: dict):
             return h["importance"] >= cutoff
         return h["importance"] >= cutoff and h["domain"] == "identity"
 
-    hits = retrieve.search(prompt, limit=settings.get("recall_max") + 3, rerank=True)
+    # touch=False: automatic injections must not feed the access-count prior, or recall would amplify itself.
+    hits = retrieve.search(prompt, limit=settings.get("recall_max") + 3, rerank=True, touch=False)
     keep = [h for h in hits if h["score"] >= settings.get("recall_min_score") and not in_profile(h)]
     keep = keep[:settings.get("recall_max")]
     with db.tx() as c:
