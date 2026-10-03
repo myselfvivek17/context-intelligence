@@ -20,6 +20,10 @@ DEFAULTS: dict[str, tuple[object, str]] = {
     "prior_access":         (0.05, "Fusion prior: access-count weight"),
     "recency_half_life_d":  (90, "Recency prior half-life in days"),
     "rerank":               (True, "Cross-encoder rerank of the fused top candidates"),
+    "rerank_blend":         (True, "Blend reranker order with fused order instead of replacing it (keeps graph/keyword "
+                                   "evidence the reranker can't see)"),
+    "rerank_fused_weight":  (0.5, "With blending on: weight of the fused (vector/keyword/graph) order relative to the "
+                                  "reranker's order"),
     "rerank_pool":          (8, "How many fused candidates go to the reranker (CPU cost is ~linear)"),
     "rerank_chars":         (320, "Characters of each candidate the reranker reads (measured: 20 full docs = 3 s "
                                   "on an i5-8250U, 8 × 320 chars ≈ 0.2 s)"),

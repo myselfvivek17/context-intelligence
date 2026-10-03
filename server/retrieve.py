@@ -138,7 +138,15 @@ def search(query: str, domain: str | None = None, limit: int = 5, type_filter: s
         cut = settings.get("rerank_chars")
         scores = embeddings.rerank(query, [rows[i]["content"][:cut] for i in pool])
         rr = dict(zip(pool, scores))
-        order = sorted(pool, key=lambda i: (rr[i], fused[i]), reverse=True) + order[len(pool):]
+        if settings.get("rerank_blend"):
+            # Blend, don't replace: the cross-encoder only reads the text, so a pure re-sort throws away graph
+            # and keyword evidence (measured: two-hop recall fell from 100% to 60-70% with a pure re-sort).
+            by_rr = {i: r for r, i in enumerate(sorted(pool, key=lambda i: rr[i], reverse=True), 1)}
+            wf = settings.get("rerank_fused_weight")
+            blend = {i: wf / (10 + rank) + 1 / (10 + by_rr[i]) for rank, i in enumerate(pool, 1)}
+            order = sorted(pool, key=blend.get, reverse=True) + order[len(pool):]
+        else:
+            order = sorted(pool, key=lambda i: (rr[i], fused[i]), reverse=True) + order[len(pool):]
     top = order[:max(1, limit)]
 
     if touch and not as_of:
