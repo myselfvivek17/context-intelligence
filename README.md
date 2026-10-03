@@ -1,6 +1,7 @@
-# Context-Intelligence v2
+# Context-Intelligence
 
-Persistent memory and skills for AI agents over MCP. One SQLite file, no LLM on the read path, and a ledger
+Persistent memory and skills for AI agents over MCP. This is v2; the original Qdrant-based v1 is preserved at
+tag [`v1.0`](../../tree/v1.0). One SQLite file, no LLM on the read path, and a ledger
 that never serves a stale fact.
 
 ## What it does differently
