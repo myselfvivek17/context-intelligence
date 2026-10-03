@@ -334,7 +334,10 @@ def store_skill(name: str, description: str, instructions: str, domain: str = "g
     emb = embeddings.embed_doc(f"{name} {description} {' '.join(trigger_tags)} {' '.join(examples)}")
     now = db.now()
     with db.tx() as c:
-        row = c.execute("SELECT id, uid, version FROM skills WHERE name = ?", (name,)).fetchone()
+        row = c.execute("SELECT * FROM skills WHERE name = ?", (name,)).fetchone()
+        if row and (row["description"], row["domain"], row["instructions"], json.loads(row["trigger_tags"]),
+                    json.loads(row["examples"])) == (description, domain, instructions, trigger_tags, examples):
+            return {"id": row["uid"], "name": name, "version": row["version"], "status": "unchanged"}
         if row:
             c.execute("UPDATE skills SET description=?, domain=?, trigger_tags=?, instructions=?, examples=?, "
                       "version=version+1, updated_at=?, embedding=?, external_id=COALESCE(external_id, ?) WHERE id=?",
