@@ -135,7 +135,8 @@ def search(query: str, domain: str | None = None, limit: int = 5, type_filter: s
     rr: dict[int, float] = {}
     if do_rerank:
         pool = order[:settings.get("rerank_pool")]
-        scores = embeddings.rerank(query, [rows[i]["content"] for i in pool])
+        cut = settings.get("rerank_chars")
+        scores = embeddings.rerank(query, [rows[i]["content"][:cut] for i in pool])
         rr = dict(zip(pool, scores))
         order = sorted(pool, key=lambda i: (rr[i], fused[i]), reverse=True) + order[len(pool):]
     top = order[:max(1, limit)]

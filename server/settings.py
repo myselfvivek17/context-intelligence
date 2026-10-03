@@ -20,7 +20,9 @@ DEFAULTS: dict[str, tuple[object, str]] = {
     "prior_access":         (0.05, "Fusion prior: access-count weight"),
     "recency_half_life_d":  (90, "Recency prior half-life in days"),
     "rerank":               (True, "Cross-encoder rerank of the fused top candidates"),
-    "rerank_pool":          (20, "How many fused candidates go to the reranker"),
+    "rerank_pool":          (8, "How many fused candidates go to the reranker (CPU cost is ~linear)"),
+    "rerank_chars":         (320, "Characters of each candidate the reranker reads (measured: 20 full docs = 3 s "
+                                  "on an i5-8250U, 8 × 320 chars ≈ 0.2 s)"),
     "link_k":               (3, "A-MEM: related links created per new memory"),
     "link_min_sim":         (0.6, "A-MEM: minimum cosine similarity for a related link"),
     "recall_min_score":     (0.0, "Recall hook: minimum rerank logit to inject a memory"),
