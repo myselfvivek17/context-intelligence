@@ -135,6 +135,12 @@ def store_memory(content: str, domain: str, type: str = "note", tags: list[str] 
         if subj_id is not None:
             same_key = db.one("SELECT * FROM memories WHERE status='active' AND domain=? AND subject_id=? AND relation=?",
                               (domain, subj_id, rel))
+            if same_key and norm_name(same_key["object_text"] or same_key["content"]) == norm_name(object or content):
+                # Restating the current value is not a change: no new version, no fake history.
+                with db.tx() as c:
+                    db.log_event(c, "restate", agent=agent, memory_id=same_key["id"])
+                return {"id": same_key["uid"], "status": "unchanged", "domain": domain,
+                        "key": f"{subject}.{same_key['relation']}"}
             if same_key:
                 target, target_conf, trace["key"] = same_key, 1.0, "exact"
             else:

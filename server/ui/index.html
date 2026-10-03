@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Memory Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/ui/app.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js" defer
+          integrity="sha512-EY3U1MWdgKx0P1dqTE4inlKz2cpXtWpsR1YUyD855Hs6RL/A0cyvrKh60EpE8wDZ814cTe1KgRK+sG0Rn792vQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="/ui/app.js" defer></script>
+</head>
+<body>
+  <div id="login" class="login" hidden>
+    <form id="login-form" class="login-card">
+      <h1>Memory console</h1>
+      <p>Enter this server's API key to continue. It's the same key your agents use (MCP_API_KEY).</p>
+      <label for="key">API key</label>
+      <input id="key" type="password" autocomplete="current-password" required>
+      <p id="login-error" class="error" role="alert"></p>
+      <button type="submit">Sign in</button>
+    </form>
+  </div>
+
+  <div id="app" class="shell" hidden>
+    <nav class="rail" aria-label="Views">
+      <div class="brand">Memory</div>
+      <a href="#overview" data-view="overview">Overview</a>
+      <a href="#graph" data-view="graph">Graph</a>
+      <a href="#memories" data-view="memories">Memories</a>
+      <a href="#review" data-view="review">Review <span id="review-count" class="count" hidden></span></a>
+      <a href="#skills" data-view="skills">Skills</a>
+      <a href="#events" data-view="events">Activity</a>
+      <a href="#settings" data-view="settings">Settings</a>
+      <button id="logout" class="link-button">Sign out</button>
+    </nav>
+    <main id="view" tabindex="-1"></main>
+    <aside id="drawer" class="drawer" aria-label="Details" hidden>
+      <button class="drawer-close" id="drawer-close" aria-label="Close details">×</button>
+      <div id="drawer-body"></div>
+    </aside>
+  </div>
+</body>
+</html>

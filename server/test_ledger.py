@@ -39,6 +39,11 @@ def main():
     hist = retrieve.search("Vivek database", include_history=True, limit=10)
     assert {"Vivek's primary database is MySQL", "Vivek's primary database is Postgres"} <= set(contents(hist))
 
+    # 1b. Restating the current value is a no-op, not a new version.
+    again = write.store_memory("Vivek's primary database is MySQL", "identity", "preference", subject="Vivek",
+                               relation="primary database", object="mysql")
+    assert again["status"] == "unchanged" and again["id"] == b["id"], again
+
     # 2. The invariant is enforced by the database itself, not just the code path.
     vid = write.find_entity("Vivek")["id"]
     try:
